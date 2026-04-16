@@ -71,19 +71,6 @@ const CCTV_SEED = [
   { id: 'daejeong-mosulpo', name: '모슬포항', region: '대정', lat: 33.2150, lng: 126.2510, streamUrl: 'http://211.34.191.215:1935/live/1-155.stream/playlist.m3u8', tags: ['대정', '항구', '마라도', '해안'], ubinWrId: 30 },
 ];
 
-// ──────────────────────────────────────
-// Live 피드 seed (CCTV에서 자동 생성)
-// ──────────────────────────────────────
-const LIVE_FEED_SEED = CCTV_SEED.slice(0, 12).map((c, i) => ({
-  id: `feed-cctv-${i + 1}`,
-  title: `${c.name} 실시간 현황`,
-  region: c.region,
-  tags: c.tags,
-  thumbnailUrl: '',
-  sourceType: 'cctv' as const,
-  cctvId: c.id,
-}));
-
 export async function POST(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const force = searchParams.get('force') === '1';
@@ -110,23 +97,16 @@ export async function POST(req: NextRequest) {
     results.push(`OK   cctv_locations/${cctv.id}`);
   }
 
-  // Live 피드 seed
-  for (const feed of LIVE_FEED_SEED) {
-    const ref = doc(db, 'live_feeds', feed.id);
-    if (!force) {
-      const snap = await getDoc(ref);
-      if (snap.exists()) { results.push(`SKIP live_feeds/${feed.id}`); continue; }
-    }
-    await setDoc(ref, { ...feed, createdAt: Timestamp.now() });
-    results.push(`OK   live_feeds/${feed.id}`);
-  }
-
-  // 이전 더미 데이터 정리
-  const OLD_IDS = ['jejusi-6-1', 'aewol-coast-1', 'seogwipo-1', 'feed-1', 'feed-2', 'feed-3'];
-  for (const id of OLD_IDS) {
-    const col = id.startsWith('feed') ? 'live_feeds' : 'cctv_locations';
-    const { deleteDoc } = await import('firebase/firestore');
-    try { await deleteDoc(doc(db, col, id)); results.push(`DEL  ${col}/${id}`); } catch { /* 없으면 무시 */ }
+  // 잘못 생성된 CCTV 기반 live_feeds 문서 전부 삭제
+  const { deleteDoc } = await import('firebase/firestore');
+  const STALE_FEED_IDS = [
+    'feed-cctv-1','feed-cctv-2','feed-cctv-3','feed-cctv-4','feed-cctv-5',
+    'feed-cctv-6','feed-cctv-7','feed-cctv-8','feed-cctv-9','feed-cctv-10',
+    'feed-cctv-11','feed-cctv-12',
+    'jejusi-6-1','aewol-coast-1','seogwipo-1','feed-1','feed-2','feed-3',
+  ];
+  for (const id of STALE_FEED_IDS) {
+    try { await deleteDoc(doc(db, 'live_feeds', id)); results.push(`DEL  live_feeds/${id}`); } catch { /* 없으면 무시 */ }
   }
 
   return NextResponse.json({ total: CCTV_SEED.length, results });
