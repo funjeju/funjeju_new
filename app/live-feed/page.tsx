@@ -7,10 +7,10 @@ import { LiveFeed } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
 
-interface LiveFeedEx extends LiveFeed {
+interface LiveFeedEx extends Omit<LiveFeed, 'exifTakenAt'> {
   freshScore?: number;
   freshLabel?: string;
-  exifTakenAt?: { seconds: number };
+  exifTakenAt?: { seconds: number; nanoseconds: number } | null;
 }
 
 const CTA_ICONS: Record<string, string> = {
