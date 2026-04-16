@@ -2,9 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { signOutUser } from '@/lib/firebase/auth';
+import Image from 'next/image';
 
 export default function Header() {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   const navItems = [
     { href: '/map', label: '지도·CCTV' },
@@ -37,12 +41,23 @@ export default function Header() {
         ))}
       </nav>
 
-      <Link
-        href="/auth"
-        className="px-4 py-2 rounded-lg bg-[#0EA5A0] text-white text-sm font-medium hover:bg-[#0D7A76] transition-colors"
-      >
-        로그인
-      </Link>
+      {user ? (
+        <div className="flex items-center gap-2">
+          {user.photoURL && (
+            <Image src={user.photoURL} alt="프로필" width={28} height={28} className="rounded-full" />
+          )}
+          <Link href="/mypage" className="text-sm font-medium text-[#1A2F4B] hover:text-[#0EA5A0]">
+            {user.displayName?.split(' ')[0] ?? '마이'}
+          </Link>
+          <button onClick={signOutUser} className="px-3 py-1.5 rounded-lg border border-[#E2E8F0] text-xs text-[#64748B] hover:bg-gray-50">
+            로그아웃
+          </button>
+        </div>
+      ) : (
+        <Link href="/auth" className="px-4 py-2 rounded-lg bg-[#0EA5A0] text-white text-sm font-medium hover:bg-[#0D7A76] transition-colors">
+          로그인
+        </Link>
+      )}
     </header>
   );
 }
