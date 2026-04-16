@@ -12,6 +12,7 @@ const cards = [
   { href: '/admin/oreums', icon: '🌿', label: '오름 관리', desc: '발행·GPS 설정·사진' },
   { href: '/admin/missions', icon: '🎯', label: '미션 관리', desc: '미션 생성·보상 설정' },
   { href: '/admin/live-feeds', icon: '📸', label: '라이브 피드', desc: '소상공인 사진 승인·관리' },
+  { href: '/admin/jeju-tube', icon: '📹', label: '제주 소식', desc: 'YouTube 동기화·캐시 관리' },
 ];
 
 export default function AdminPage() {
