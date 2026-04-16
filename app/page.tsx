@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { CCTVLocation, LiveFeed, Mission, Oreum } from '@/types';
-import CCTVPlayer from '@/components/cctv/CCTVPlayer';
 import LiveBadge from '@/components/ui/LiveBadge';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -24,16 +23,39 @@ function HeroSection({ cctv }: { cctv: CCTVLocation | null }) {
     return <Skeleton className="w-full aspect-video max-h-[480px]" />;
   }
 
+  function openStream() {
+    if (cctv?.ubinWrId) {
+      window.open(
+        `http://ubin.onpr.co.kr/bbs/board.php?bo_table=cctv&wr_id=${cctv.ubinWrId}`,
+        '_blank',
+        'noopener,noreferrer'
+      );
+    }
+  }
+
   return (
-    <div className="relative w-full aspect-video max-h-[480px] bg-black overflow-hidden rounded-b-2xl md:rounded-2xl">
-      <CCTVPlayer streamUrl={cctv.streamUrl} autoplay muted controls={false} />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-      <div className="absolute top-3 left-3 flex items-center gap-2">
-        <LiveBadge />
-        <span className="text-white text-sm font-medium drop-shadow">{cctv.name}</span>
+    <div className="relative w-full aspect-video max-h-[480px] bg-gray-900 overflow-hidden rounded-b-2xl md:rounded-2xl flex flex-col items-center justify-center gap-4">
+      {/* 배경 그라디언트 */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0EA5A0]/30 to-[#1A2F4B]/80" />
+
+      <div className="relative z-10 flex flex-col items-center gap-3 text-center px-6">
+        <div className="flex items-center gap-2">
+          <LiveBadge />
+          <span className="text-white font-semibold text-lg drop-shadow">{cctv.name}</span>
+        </div>
+        <p className="text-white/60 text-sm">{cctv.region} · 제주도 공식 CCTV</p>
+        {cctv.ubinWrId ? (
+          <button
+            onClick={openStream}
+            className="mt-2 px-6 py-3 bg-[#0EA5A0] text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-[#0D7A76] transition-colors shadow-lg"
+          >
+            📺 실시간 영상 보기
+          </button>
+        ) : null}
       </div>
-      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-        <span className="text-white/80 text-xs">{cctv.region}</span>
+
+      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">
+        <span className="text-white/60 text-xs">📡 새 창에서 재생됩니다</span>
         <Link
           href="/map"
           className="text-white text-xs bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full hover:bg-white/30 transition-colors"

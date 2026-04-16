@@ -1,7 +1,6 @@
 'use client';
 
 import { CCTVLocation } from '@/types';
-import CCTVPlayer from './CCTVPlayer';
 import LiveBadge from '@/components/ui/LiveBadge';
 
 interface Props {
@@ -10,6 +9,16 @@ interface Props {
 }
 
 export default function CCTVPopup({ cctv, onClose }: Props) {
+  function openStream() {
+    if (cctv.ubinWrId) {
+      window.open(
+        `http://ubin.onpr.co.kr/bbs/board.php?bo_table=cctv&wr_id=${cctv.ubinWrId}`,
+        '_blank',
+        'noopener,noreferrer'
+      );
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50" onClick={onClose}>
       <div className="w-full max-w-lg bg-white rounded-t-2xl md:rounded-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
@@ -25,9 +34,24 @@ export default function CCTVPopup({ cctv, onClose }: Props) {
           <button onClick={onClose} className="text-[#64748B] hover:text-[#1A2F4B] text-xl leading-none">✕</button>
         </div>
 
-        {/* 플레이어 */}
-        <div className="aspect-video bg-black">
-          <CCTVPlayer streamUrl={cctv.streamUrl} autoplay muted />
+        {/* 영상 보기 영역 */}
+        <div className="aspect-video bg-gray-900 flex flex-col items-center justify-center gap-4 px-6">
+          <p className="text-white/60 text-sm text-center">
+            📡 제주도 공식 CCTV 실시간 영상
+          </p>
+          <p className="text-white/40 text-xs text-center">
+            보안상 새 창에서 재생됩니다
+          </p>
+          {cctv.ubinWrId ? (
+            <button
+              onClick={openStream}
+              className="px-6 py-3 bg-[#0EA5A0] text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-[#0D7A76] transition-colors"
+            >
+              📺 실시간 영상 보기
+            </button>
+          ) : (
+            <p className="text-white/30 text-xs">영상 링크 준비 중</p>
+          )}
         </div>
 
         {/* 태그 */}

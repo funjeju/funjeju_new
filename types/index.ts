@@ -14,6 +14,7 @@ export interface CCTVLocation {
   thumbnailUrl: string;
   lastThumbnailAt: Timestamp;
   region: string;
+  ubinWrId?: number;
 }
 
 // ====== POI ======
