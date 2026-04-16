@@ -1,17 +1,21 @@
 'use client';
 
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 import Image from 'next/image';
+import Link from 'next/link';
 import LoginPrompt from '@/components/ui/LoginPrompt';
 
-const CTA_OPTIONS = [
-  { value: 'visit', label: '📍 지금 방문하기' },
-  { value: 'call', label: '📞 전화하기' },
-  { value: 'menu', label: '🍽 메뉴 보기' },
-  { value: 'reserve', label: '📅 예약하기' },
-];
+interface PartnerProfile {
+  businessName: string;
+  ctaType: string;
+  ctaLabel: string;
+  ctaUrl: string;
+  ctaPhone: string;
+}
 
 interface UploadResult {
   preview: string;
@@ -27,19 +31,25 @@ export default function PartnerUploadPage() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [profile, setProfile] = useState<PartnerProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
   const [file, setFile] = useState<File | null>(null);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
-  const [businessName, setBusinessName] = useState('');
-  const [ctaType, setCtaType] = useState('visit');
-  const [ctaLabel, setCtaLabel] = useState('지금 방문하기');
-  const [ctaUrl, setCtaUrl] = useState('');
-  const [ctaPhone, setCtaPhone] = useState('');
-
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showLogin, setShowLogin] = useState(false);
   const [done, setDone] = useState(false);
+
+  // 파트너 프로필 자동 로드
+  useEffect(() => {
+    if (!user) { setProfileLoading(false); return; }
+    getDoc(doc(db, 'users', user.uid)).then(snap => {
+      const data = snap.data();
+      if (data?.partnerProfile) setProfile(data.partnerProfile as PartnerProfile);
+    }).finally(() => setProfileLoading(false));
+  }, [user]);
 
   function handleFile(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -52,7 +62,7 @@ export default function PartnerUploadPage() {
 
   async function handleUpload() {
     if (!user) { setShowLogin(true); return; }
-    if (!file || !businessName) return;
+    if (!file || !profile) return;
 
     setUploading(true);
     setError(null);
@@ -60,11 +70,11 @@ export default function PartnerUploadPage() {
     const form = new FormData();
     form.append('photo', file);
     form.append('partnerId', user.uid);
-    form.append('businessName', businessName);
-    form.append('ctaType', ctaType);
-    form.append('ctaLabel', ctaLabel);
-    if (ctaType === 'call') form.append('ctaPhone', ctaPhone);
-    else form.append('ctaUrl', ctaUrl);
+    form.append('businessName', profile.businessName);
+    form.append('ctaType', profile.ctaType);
+    form.append('ctaLabel', profile.ctaLabel);
+    if (profile.ctaType === 'call') form.append('ctaPhone', profile.ctaPhone);
+    else if (profile.ctaUrl) form.append('ctaUrl', profile.ctaUrl);
 
     const res = await fetch('/api/live-feed/upload', { method: 'POST', body: form });
     const data = await res.json();
@@ -79,10 +89,6 @@ export default function PartnerUploadPage() {
     setUploading(false);
   }
 
-  async function handlePublish() {
-    setDone(true);
-  }
-
   if (done) return (
     <div className="max-w-lg mx-auto px-4 py-12 text-center">
       <p className="text-5xl mb-4">🎉</p>
@@ -93,16 +99,50 @@ export default function PartnerUploadPage() {
           신선도 점수: <strong>{result.freshScore}점</strong> · {result.freshLabel}
         </div>
       )}
-      <button onClick={() => router.push('/')} className="w-full py-3 bg-[#0EA5A0] text-white rounded-xl font-semibold">
-        메인에서 확인하기
-      </button>
+      <div className="space-y-3">
+        <button onClick={() => { setDone(false); setFile(null); setPreviewSrc(null); setResult(null); }}
+          className="w-full py-3 border border-[#0EA5A0] text-[#0EA5A0] rounded-xl font-semibold">
+          사진 한 장 더 올리기
+        </button>
+        <button onClick={() => router.push('/')}
+          className="w-full py-3 bg-[#0EA5A0] text-white rounded-xl font-semibold">
+          메인에서 확인하기
+        </button>
+      </div>
+    </div>
+  );
+
+  // 프로필 미등록 상태
+  if (!profileLoading && user && !profile) return (
+    <div className="max-w-lg mx-auto px-4 py-12 text-center">
+      <p className="text-5xl mb-4">📋</p>
+      <h2 className="text-xl font-bold text-[#1A2F4B] mb-2">파트너 정보를 먼저 등록해주세요</h2>
+      <p className="text-sm text-[#64748B] mb-6">
+        마이페이지에서 업체명과 CTA 버튼을 한 번만 설정하면<br />
+        이후 사진만 찍어서 바로 올릴 수 있어요
+      </p>
+      <Link href="/mypage"
+        className="inline-block px-8 py-3 bg-[#0EA5A0] text-white rounded-xl font-semibold">
+        마이페이지에서 설정하기 →
+      </Link>
     </div>
   );
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 pb-24">
       <h1 className="text-xl font-bold text-[#1A2F4B] mb-1">📸 오늘의 현장 사진 올리기</h1>
-      <p className="text-sm text-[#64748B] mb-6">GPS 정보가 포함된 사진만 Live 피드에 자동 등록됩니다</p>
+      <p className="text-sm text-[#64748B] mb-5">GPS 정보가 포함된 사진만 Live 피드에 자동 등록됩니다</p>
+
+      {/* 파트너 프로필 요약 */}
+      {profile && (
+        <div className="flex items-center justify-between bg-[#F0FDF9] border border-[#0EA5A0]/20 rounded-xl px-4 py-3 mb-5">
+          <div>
+            <p className="text-sm font-semibold text-[#1A2F4B]">{profile.businessName}</p>
+            <p className="text-xs text-[#64748B] mt-0.5">CTA: {profile.ctaLabel}</p>
+          </div>
+          <Link href="/mypage" className="text-xs text-[#0EA5A0] hover:underline">수정 →</Link>
+        </div>
+      )}
 
       {/* 사진 선택 */}
       <div
@@ -121,41 +161,6 @@ export default function PartnerUploadPage() {
         <input ref={fileRef} type="file" accept="image/jpeg,image/jpg,image/png" capture="environment" className="hidden" onChange={handleFile} />
       </div>
 
-      {/* 업체명 */}
-      <div className="mb-4">
-        <label className="text-sm font-medium text-[#1A2F4B] mb-1 block">업체명 *</label>
-        <input
-          value={businessName} onChange={e => setBusinessName(e.target.value)}
-          placeholder="예: 협재 카페 바다향"
-          className="w-full border border-[#E2E8F0] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#0EA5A0]"
-        />
-      </div>
-
-      {/* CTA 설정 */}
-      <div className="mb-4">
-        <label className="text-sm font-medium text-[#1A2F4B] mb-2 block">CTA 버튼 *</label>
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          {CTA_OPTIONS.map(opt => (
-            <button key={opt.value} onClick={() => {
-              setCtaType(opt.value);
-              setCtaLabel(opt.label.slice(3)); // 이모지 제거
-            }}
-              className={`py-2.5 rounded-xl text-sm font-medium border transition-colors ${ctaType === opt.value ? 'bg-[#0EA5A0] text-white border-[#0EA5A0]' : 'bg-white text-[#64748B] border-[#E2E8F0]'}`}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        <input value={ctaLabel} onChange={e => setCtaLabel(e.target.value)}
-          placeholder="버튼 문구"
-          className="w-full border border-[#E2E8F0] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#0EA5A0] mb-2" />
-        {ctaType === 'call'
-          ? <input value={ctaPhone} onChange={e => setCtaPhone(e.target.value)} placeholder="전화번호 (064-xxx-xxxx)"
-              className="w-full border border-[#E2E8F0] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#0EA5A0]" />
-          : <input value={ctaUrl} onChange={e => setCtaUrl(e.target.value)} placeholder="연결 URL (선택)"
-              className="w-full border border-[#E2E8F0] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#0EA5A0]" />
-        }
-      </div>
-
       {/* 에러 */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
@@ -170,7 +175,7 @@ export default function PartnerUploadPage() {
       )}
 
       {/* AI 분석 결과 미리보기 */}
-      {result && (
+      {result && profile && (
         <div className="bg-[#F0FDF9] border border-[#0EA5A0]/30 rounded-2xl p-4 mb-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xs font-bold text-[#0EA5A0]">✨ AI 콘텐츠 생성 완료</span>
@@ -183,7 +188,6 @@ export default function PartnerUploadPage() {
             <span>·</span>
             <span>🕐 {result.freshLabel}</span>
           </div>
-          {/* 피드 카드 미리보기 */}
           <div className="bg-white rounded-xl overflow-hidden border border-[#E2E8F0]">
             <div className="relative aspect-[4/3]">
               <Image src={result.photoUrl} alt="preview" fill className="object-cover" unoptimized />
@@ -198,8 +202,8 @@ export default function PartnerUploadPage() {
             <div className="p-3">
               <p className="text-xs text-[#64748B] line-clamp-3 mb-2">{result.preview}</p>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#1A2F4B]">{businessName}</span>
-                <button className="text-xs bg-[#0EA5A0] text-white px-3 py-1 rounded-lg">{ctaLabel}</button>
+                <span className="text-xs font-semibold text-[#1A2F4B]">{profile.businessName}</span>
+                <button className="text-xs bg-[#0EA5A0] text-white px-3 py-1 rounded-lg">{profile.ctaLabel}</button>
               </div>
             </div>
           </div>
@@ -209,7 +213,7 @@ export default function PartnerUploadPage() {
       {/* 버튼 */}
       {!result ? (
         <button onClick={handleUpload}
-          disabled={!file || !businessName || uploading}
+          disabled={!file || !profile || uploading}
           className="w-full py-4 bg-[#0EA5A0] text-white rounded-xl font-semibold text-base disabled:opacity-40 disabled:cursor-not-allowed">
           {uploading ? (
             <span className="flex items-center justify-center gap-2">
@@ -224,7 +228,7 @@ export default function PartnerUploadPage() {
             className="flex-1 py-4 border border-[#E2E8F0] text-[#64748B] rounded-xl font-semibold">
             수정하기
           </button>
-          <button onClick={handlePublish}
+          <button onClick={() => setDone(true)}
             className="flex-1 py-4 bg-[#0EA5A0] text-white rounded-xl font-semibold">
             Live 피드에 올리기
           </button>
