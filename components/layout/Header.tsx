@@ -11,6 +11,7 @@ export default function Header() {
   const { user } = useAuth();
 
   const navItems = [
+    { href: '/live-feed', label: '🔴 Live 피드' },
     { href: '/map', label: '지도·CCTV' },
     { href: '/weather', label: '날씨캐스터' },
     { href: '/oreums', label: '오름 도감' },

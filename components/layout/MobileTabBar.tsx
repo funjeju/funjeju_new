@@ -5,10 +5,10 @@ import { usePathname } from 'next/navigation';
 
 const tabs = [
   { href: '/', label: '홈', icon: '🏠' },
+  { href: '/live-feed', label: 'Live', icon: '🔴' },
   { href: '/map', label: '지도', icon: '🗺' },
   { href: '/oreums', label: '오름', icon: '🌿' },
   { href: '/missions', label: '미션', icon: '🎯' },
-  { href: '/jeju-tube', label: '소식', icon: '▶️' },
   { href: '/mypage', label: '마이', icon: '👤' },
 ];
 
