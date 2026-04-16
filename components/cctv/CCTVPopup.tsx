@@ -13,7 +13,10 @@ export default function CCTVPopup({ cctv, onClose }: Props) {
     const url = cctv.ubinWrId
       ? `http://ubin.onpr.co.kr/bbs/board.php?bo_table=cctv&wr_id=${cctv.ubinWrId}`
       : 'http://ubin.onpr.co.kr/bbs/board.php?bo_table=cctv';
-    window.open(url, '_blank', 'noopener,noreferrer');
+    const w = 900, h = 620;
+    const left = Math.round((screen.width - w) / 2);
+    const top = Math.round((screen.height - h) / 2);
+    window.open(url, 'cctv_viewer', `width=${w},height=${h},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes`);
   }
 
   return (
