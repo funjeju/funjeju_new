@@ -24,13 +24,10 @@ function HeroSection({ cctv }: { cctv: CCTVLocation | null }) {
   }
 
   function openStream() {
-    if (cctv?.ubinWrId) {
-      window.open(
-        `http://ubin.onpr.co.kr/bbs/board.php?bo_table=cctv&wr_id=${cctv.ubinWrId}`,
-        '_blank',
-        'noopener,noreferrer'
-      );
-    }
+    const url = cctv?.ubinWrId
+      ? `http://ubin.onpr.co.kr/bbs/board.php?bo_table=cctv&wr_id=${cctv.ubinWrId}`
+      : 'http://ubin.onpr.co.kr/bbs/board.php?bo_table=cctv';
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   return (
@@ -44,14 +41,12 @@ function HeroSection({ cctv }: { cctv: CCTVLocation | null }) {
           <span className="text-white font-semibold text-lg drop-shadow">{cctv.name}</span>
         </div>
         <p className="text-white/60 text-sm">{cctv.region} · 제주도 공식 CCTV</p>
-        {cctv.ubinWrId ? (
-          <button
-            onClick={openStream}
-            className="mt-2 px-6 py-3 bg-[#0EA5A0] text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-[#0D7A76] transition-colors shadow-lg"
-          >
-            📺 실시간 영상 보기
-          </button>
-        ) : null}
+        <button
+          onClick={openStream}
+          className="mt-2 px-6 py-3 bg-[#0EA5A0] text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-[#0D7A76] transition-colors shadow-lg"
+        >
+          📺 실시간 영상 보기
+        </button>
       </div>
 
       <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">

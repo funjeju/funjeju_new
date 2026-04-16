@@ -10,13 +10,10 @@ interface Props {
 
 export default function CCTVPopup({ cctv, onClose }: Props) {
   function openStream() {
-    if (cctv.ubinWrId) {
-      window.open(
-        `http://ubin.onpr.co.kr/bbs/board.php?bo_table=cctv&wr_id=${cctv.ubinWrId}`,
-        '_blank',
-        'noopener,noreferrer'
-      );
-    }
+    const url = cctv.ubinWrId
+      ? `http://ubin.onpr.co.kr/bbs/board.php?bo_table=cctv&wr_id=${cctv.ubinWrId}`
+      : 'http://ubin.onpr.co.kr/bbs/board.php?bo_table=cctv';
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   return (
@@ -42,16 +39,12 @@ export default function CCTVPopup({ cctv, onClose }: Props) {
           <p className="text-white/40 text-xs text-center">
             보안상 새 창에서 재생됩니다
           </p>
-          {cctv.ubinWrId ? (
-            <button
-              onClick={openStream}
-              className="px-6 py-3 bg-[#0EA5A0] text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-[#0D7A76] transition-colors"
-            >
-              📺 실시간 영상 보기
-            </button>
-          ) : (
-            <p className="text-white/30 text-xs">영상 링크 준비 중</p>
-          )}
+          <button
+            onClick={openStream}
+            className="px-6 py-3 bg-[#0EA5A0] text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-[#0D7A76] transition-colors"
+          >
+            📺 실시간 영상 보기
+          </button>
         </div>
 
         {/* 태그 */}
