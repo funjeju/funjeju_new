@@ -1,4 +1,6 @@
-export const runtime = 'edge';
+export const runtime = 'nodejs';
+export const maxDuration = 30;
+export const preferredRegion = 'icn1'; // 서울 리전 (Vercel Pro) or 'nrt1' 도쿄
 
 const ALLOWED_HOSTS = (process.env.HLS_ALLOWED_HOSTS || '211.114.96.121').split(',');
 
