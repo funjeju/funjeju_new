@@ -11,6 +11,7 @@ const cards = [
   { href: '/admin/cctv', icon: '📷', label: 'CCTV 관리', desc: '스트림 추가·수정·삭제' },
   { href: '/admin/oreums', icon: '🌿', label: '오름 관리', desc: '발행·GPS 설정·사진' },
   { href: '/admin/missions', icon: '🎯', label: '미션 관리', desc: '미션 생성·보상 설정' },
+  { href: '/admin/live-feeds', icon: '📸', label: '라이브 피드', desc: '소상공인 사진 승인·관리' },
 ];
 
 export default function AdminPage() {
@@ -45,6 +46,7 @@ export default function AdminPage() {
       <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6">
         <h2 className="font-semibold text-[#1A2F4B] mb-4">데이터 Import</h2>
         <div className="space-y-3">
+          <ImportButton label="CCTV 44개 Seed (실제 스트림 데이터)" endpoint="/api/seed" method="POST" query="?force=1" />
           <ImportButton label="POI 5,981개 Import (200개씩)" endpoint="/api/import-pois" total={5981} batchSize={200} />
           <ImportButton label="오름 데이터 Import" endpoint="/api/import-oreums" />
         </div>
@@ -53,10 +55,10 @@ export default function AdminPage() {
   );
 }
 
-function ImportButton({ label, endpoint, total, batchSize }: { label: string; endpoint: string; total?: number; batchSize?: number }) {
+function ImportButton({ label, endpoint, total, batchSize, method = 'POST', query = '' }: { label: string; endpoint: string; total?: number; batchSize?: number; method?: string; query?: string }) {
   async function run() {
     if (!total || !batchSize) {
-      const r = await fetch(endpoint, { method: 'POST' });
+      const r = await fetch(endpoint + query, { method });
       alert(JSON.stringify(await r.json(), null, 2));
       return;
     }

@@ -219,15 +219,26 @@ export interface WeatherCache {
   updatedAt: Timestamp;
 }
 
-// ====== Live 피드 ======
+// ====== Live 피드 (소상공인 사진 + EXIF + CTA) ======
 export interface LiveFeed {
   id: string;
-  title: string;
-  thumbnailUrl: string;
+  partnerId: string;
+  businessName: string;
+  photoUrl: string;
+  caption?: string;
   region: string;
   tags: string[];
+  // EXIF 추출 위치
+  exifLat?: number;
+  exifLng?: number;
+  exifTakenAt?: Timestamp;
+  // CTA 자동생성
+  ctaType: 'visit' | 'call' | 'menu' | 'reserve';
+  ctaLabel: string;
+  ctaUrl?: string;
+  ctaPhone?: string;
+  isApproved: boolean;
   createdAt: Timestamp;
-  sourceType: 'cctv' | 'partner' | 'admin';
 }
 
 // ====== 유튜브 캐시 ======

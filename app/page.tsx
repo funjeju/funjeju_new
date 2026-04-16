@@ -46,24 +46,63 @@ function HeroSection({ cctv }: { cctv: CCTVLocation | null }) {
 }
 
 // ──────────────────────────────────────
-// Live 피드 카드
+// Live 피드 카드 (소상공인 사진 + CTA)
 // ──────────────────────────────────────
-function LiveFeedCard({ feed }: { feed: LiveFeed }) {
+const CTA_ICONS: Record<string, string> = {
+  visit: '📍', call: '📞', menu: '🍽', reserve: '📅',
+};
+
+// LiveFeed에 freshScore/freshLabel이 추가됨
+interface LiveFeedEx extends LiveFeed {
+  freshScore?: number;
+  freshLabel?: string;
+}
+
+function LiveFeedCard({ feed }: { feed: LiveFeedEx }) {
+  function handleCTA(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (feed.ctaType === 'call' && feed.ctaPhone) {
+      window.location.href = `tel:${feed.ctaPhone}`;
+    } else if (feed.ctaUrl) {
+      window.open(feed.ctaUrl, '_blank');
+    }
+  }
+
+  const freshLabel = feed.freshLabel ?? null;
+  const isFresh = (feed.freshScore ?? 100) >= 80;
+
   return (
-    <div className="rounded-xl overflow-hidden bg-white border border-[#E2E8F0] hover:shadow-md transition-shadow cursor-pointer">
-      <div className="relative aspect-video bg-gray-100">
-        {feed.thumbnailUrl ? (
-          <Image src={feed.thumbnailUrl} alt={feed.title} fill className="object-cover" />
+    <div className="rounded-xl overflow-hidden bg-white border border-[#E2E8F0] hover:shadow-md transition-shadow">
+      {/* 사진 */}
+      <div className="relative aspect-[4/3] bg-gray-100">
+        {feed.photoUrl ? (
+          <Image src={feed.photoUrl} alt={feed.businessName} fill className="object-cover" unoptimized />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">📷</div>
+          <div className="w-full h-full flex items-center justify-center text-gray-300 text-3xl">📷</div>
         )}
-        <div className="absolute top-2 left-2">
-          <LiveBadge />
+        {/* 신선도 뱃지 */}
+        <div className="absolute top-2 left-2 flex items-center gap-1 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+          <span className={`w-1.5 h-1.5 bg-white rounded-full ${isFresh ? 'animate-pulse' : ''}`} />
+          {freshLabel ?? 'LIVE'}
         </div>
+        {feed.region && (
+          <span className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded-full">
+            📍 {feed.region}
+          </span>
+        )}
       </div>
+
+      {/* 정보 + CTA */}
       <div className="p-3">
-        <p className="text-sm font-medium text-[#1A2F4B] line-clamp-2">{feed.title}</p>
-        <p className="text-xs text-[#64748B] mt-1">{feed.region}</p>
+        <p className="text-sm font-semibold text-[#1A2F4B] truncate">{feed.businessName}</p>
+        {feed.caption && <p className="text-xs text-[#64748B] mt-0.5 line-clamp-2">{feed.caption}</p>}
+        <button
+          onClick={handleCTA}
+          className="mt-2 w-full py-1.5 bg-[#0EA5A0] text-white text-xs font-semibold rounded-lg hover:bg-[#0D7A76] transition-colors flex items-center justify-center gap-1"
+        >
+          <span>{CTA_ICONS[feed.ctaType]}</span>
+          <span>{feed.ctaLabel}</span>
+        </button>
       </div>
     </div>
   );
@@ -149,7 +188,13 @@ export default function HomePage() {
         }
 
         const feedSnap = await getDocs(
-          query(collection(db, 'live_feeds'), orderBy('createdAt', 'desc'), limit(12))
+          query(
+            collection(db, 'live_feeds'),
+            where('isApproved', '==', true),
+            orderBy('freshScore', 'desc'),
+            orderBy('createdAt', 'desc'),
+            limit(12)
+          )
         );
         setLiveFeeds(feedSnap.docs.map(d => ({ id: d.id, ...d.data() } as LiveFeed)));
 
