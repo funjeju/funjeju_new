@@ -4,19 +4,26 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { signOutUser } from '@/lib/firebase/auth';
+import { useChatStore } from '@/store/chatStore';
+import type { ChatTab } from '@/store/chatStore';
 import Image from 'next/image';
 
 export default function Header() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { setOpen } = useChatStore();
 
   const navItems = [
     { href: '/live-feed', label: '🔴 Live 피드' },
     { href: '/map', label: '지도·CCTV' },
-    { href: '/weather', label: '날씨캐스터' },
     { href: '/oreums', label: '오름 도감' },
     { href: '/missions', label: '미션' },
     { href: '/jeju-tube', label: '제주 소식' },
+  ];
+
+  const aiItems: { label: string; tab: ChatTab }[] = [
+    { label: '🤖 도슨트 AI', tab: 'docent' },
+    { label: '🌤 날씨캐스터', tab: 'weather' },
   ];
 
   return (
@@ -40,6 +47,22 @@ export default function Header() {
             {item.label}
           </Link>
         ))}
+
+        {/* AI 챗봇 드롭다운 */}
+        <div className="relative group">
+          <button className="px-4 py-2 rounded-lg text-sm font-medium text-[#1A2F4B] hover:bg-gray-100 flex items-center gap-1">
+            🤖 AI 챗봇
+            <span className="text-[10px] text-[#94A3B8]">▾</span>
+          </button>
+          <div className="absolute top-full left-0 mt-1 w-40 bg-white border border-[#E2E8F0] rounded-xl shadow-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+            {aiItems.map(a => (
+              <button key={a.tab} onClick={() => setOpen(true, a.tab)}
+                className="w-full text-left px-4 py-2.5 text-sm text-[#1A2F4B] hover:bg-[#E0F7F6] hover:text-[#0EA5A0] transition-colors">
+                {a.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </nav>
 
       {user ? (

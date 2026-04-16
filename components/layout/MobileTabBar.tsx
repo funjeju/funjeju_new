@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useChatStore } from '@/store/chatStore';
 
 const tabs = [
   { href: '/', label: '홈', icon: '🏠' },
@@ -14,6 +15,7 @@ const tabs = [
 
 export default function MobileTabBar() {
   const pathname = usePathname();
+  const { setOpen } = useChatStore();
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href);
