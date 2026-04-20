@@ -9,7 +9,7 @@ const tabs = [
   { href: '/live-feed', label: 'Live', icon: '🔴' },
   { href: '/map', label: '지도', icon: '🗺' },
   { href: '/oreums', label: '오름', icon: '🌿' },
-  { href: '/missions', label: '미션', icon: '🎯' },
+  { href: '/geocaching', label: '보물', icon: '📦' },
   { href: '/mypage', label: '마이', icon: '👤' },
 ];
 

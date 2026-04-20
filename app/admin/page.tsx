@@ -13,6 +13,7 @@ const cards = [
   { href: '/admin/missions', icon: '🎯', label: '미션 관리', desc: '미션 생성·보상 설정' },
   { href: '/admin/live-feeds', icon: '📸', label: '라이브 피드', desc: '소상공인 사진 승인·관리' },
   { href: '/admin/jeju-tube', icon: '📹', label: '제주 소식', desc: 'YouTube 동기화·캐시 관리' },
+  { href: '/admin/geocaching', icon: '🗺', label: '지오캐싱', desc: '캐시 승인·비활성화·보관' },
 ];
 
 export default function AdminPage() {

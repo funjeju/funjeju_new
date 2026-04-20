@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"require\\('firebase-admin'\\)\")",
+      "Bash(gcloud auth *)",
+      "Bash(firebase login:print-access-token)",
+      "Read(//c/Users/funjeju/.config/configstore/**)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); tokens=d.get\\('tokens',{}\\); print\\('access_token있음' if tokens.get\\('access_token'\\) else '없음'\\); print\\(list\\(d.keys\\(\\)\\)\\)\")",
+      "Read(//c/Users/funjeju/AppData/Roaming/**)",
+      "Read(//c/Users/funjeju/.config/**)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); tokens=d.get\\('tokens',{}\\); print\\('refresh_token있음' if tokens.get\\('refresh_token'\\) else '없음'\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const d=JSON.parse\\(fs.readFileSync\\('C:/Users/funjeju/AppData/Roaming/configstore/firebase-tools.json','utf8'\\)\\); const t=d.tokens||{}; console.log\\('refresh_token있음:', !!t.refresh_token\\);\")",
+      "Bash(git -C /c/Users/funjeju/Desktop/aiproject/funjeju/staylink log --oneline -30)"
+    ]
+  }
+}

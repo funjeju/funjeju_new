@@ -18,6 +18,7 @@ export default function Header() {
     { href: '/map', label: '지도·CCTV' },
     { href: '/oreums', label: '오름 도감' },
     { href: '/missions', label: '미션' },
+    { href: '/geocaching', label: '📦 지오캐싱' },
     { href: '/jeju-tube', label: '제주 소식' },
   ];
 

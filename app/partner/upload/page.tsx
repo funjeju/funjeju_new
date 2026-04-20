@@ -224,7 +224,13 @@ export default function PartnerUploadPage() {
         </button>
       ) : (
         <div className="flex gap-3">
-          <button onClick={() => { setResult(null); setFile(null); setPreviewSrc(null); }}
+          <button onClick={async () => {
+            // 이미 업로드된 피드 삭제
+            if (result?.id) {
+              await fetch(`/api/live-feed?id=${result.id}`, { method: 'DELETE' }).catch(() => {});
+            }
+            setResult(null); setFile(null); setPreviewSrc(null);
+          }}
             className="flex-1 py-4 border border-[#E2E8F0] text-[#64748B] rounded-xl font-semibold">
             수정하기
           </button>

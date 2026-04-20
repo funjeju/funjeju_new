@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { CCTVLocation } from '@/types';
@@ -21,11 +21,18 @@ export default function MapPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = filter === '전체'
-    ? cctvList
-    : cctvList.filter(c => c.tags?.some(t => t.includes(filter)));
+  const filtered = useMemo(() =>
+    filter === '전체'
+      ? cctvList
+      : cctvList.filter(c => c.tags?.some(t => t.includes(filter))),
+    [cctvList, filter]
+  );
 
-  const markers = filtered.map(c => ({ id: c.id, lat: c.lat, lng: c.lng, title: c.name, isActive: c.isActive }));
+  // useMemo로 참조 고정 → KakaoMap useEffect 불필요한 재실행 방지
+  const markers = useMemo(() =>
+    filtered.map(c => ({ id: c.id, lat: c.lat, lng: c.lng, title: c.name, isActive: c.isActive })),
+    [filtered]
+  );
 
   function handleMarkerClick(id: string) {
     setSelected(cctvList.find(c => c.id === id) ?? null);

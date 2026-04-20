@@ -38,8 +38,8 @@ export default function OreumPage() {
 
   useEffect(() => {
     if (!user) return;
-    getDocs(collection(db, 'oreum_stamps')).then(snap => {
-      setStamps(new Set(snap.docs.filter(d => d.data().uid === user.uid).map(d => d.data().oreumId)));
+    getDocs(query(collection(db, 'oreum_stamps'), where('uid', '==', user.uid))).then(snap => {
+      setStamps(new Set(snap.docs.map(d => d.data().oreumId as string)));
     });
   }, [user]);
 

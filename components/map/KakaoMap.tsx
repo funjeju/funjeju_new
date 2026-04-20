@@ -61,6 +61,13 @@ export default function KakaoMap({ markers = [], center = { lat: 33.38, lng: 126
 
     if (window.kakao?.maps) { init(); return; }
 
+    // 이미 로드 중인 스크립트가 있으면 중복 추가 방지
+    const existing = document.head.querySelector('script[src*="dapi.kakao.com"]');
+    if (existing) {
+      existing.addEventListener('load', () => window.kakao.maps.load(init));
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&autoload=false`;
     script.onload = () => window.kakao.maps.load(init);

@@ -128,6 +128,7 @@ export default function LiveFeedPage() {
           query(
             collection(db, 'live_feeds'),
             where('isApproved', '==', true),
+            orderBy('freshScore', 'desc'),
             orderBy('createdAt', 'desc'),
             limit(30)
           )
