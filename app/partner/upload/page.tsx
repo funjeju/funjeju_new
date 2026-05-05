@@ -62,7 +62,7 @@ function calcFreshScore(shootAt: Date): number {
   if (diffHours < 1) return 100;
   if (diffHours < 3) return 80;
   if (diffHours < 6) return 60;
-  if (diffHours < 12) return 40;
+  if (diffHours < 24) return 40;
   return 0;
 }
 
@@ -327,9 +327,9 @@ export default function PartnerUploadPage() {
                 <span className="bg-black/50 text-white text-[11px] px-2.5 py-1 rounded-full backdrop-blur-sm">
                   📍 {result.locationName}
                 </span>
-              ) : (
-                <span className="bg-[#0EA5A0]/85 text-white text-[11px] px-2.5 py-1 rounded-full backdrop-blur-sm">
-                  📍 GPS 확인 ✓
+              ) : exifInfo && (
+                <span className="bg-[#0EA5A0]/85 text-white text-[11px] px-2.5 py-1 rounded-full backdrop-blur-sm font-mono">
+                  📍 {exifInfo.lat.toFixed(4)}, {exifInfo.lng.toFixed(4)}
                 </span>
               )}
             </div>
@@ -462,7 +462,7 @@ export default function PartnerUploadPage() {
               <p className="text-sm text-[#64748B] mt-1.5 leading-relaxed">
                 {exifError === 'no-gps'
                   ? 'Live 피드에는 GPS 정보가 포함된\n사진만 등록할 수 있어요'
-                  : '12시간 이상 경과한 사진은\nLive 피드에 등록할 수 없어요'}
+                  : '24시간 이상 경과한 사진은\nLive 피드에 등록할 수 없어요'}
               </p>
             </div>
 

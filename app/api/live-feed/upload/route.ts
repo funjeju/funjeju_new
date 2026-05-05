@@ -13,7 +13,7 @@ function calcFreshScore(shootAt: Date): number {
   if (diffHours < 1)  return 100;
   if (diffHours < 3)  return 80;
   if (diffHours < 6)  return 60;
-  if (diffHours < 12) return 40;
+  if (diffHours < 24) return 40;
   return 0;
 }
 
@@ -94,6 +94,7 @@ async function fetchImageAsBase64(url: string): Promise<string> {
 
 // ── 메인 핸들러 ─────────────────────────────
 export async function POST(req: NextRequest) {
+  try {
   const formData = await req.formData();
   const file = formData.get('photo') as File | null;
   const partnerId = formData.get('partnerId') as string ?? 'anonymous';
@@ -148,15 +149,21 @@ export async function POST(req: NextRequest) {
 
   const freshScore = calcFreshScore(shootAt);
   if (freshScore === 0) {
-    return NextResponse.json({ error: 'TOO_OLD', message: '12시간 이상 경과된 사진은 등록할 수 없습니다.' }, { status: 400 });
+    return NextResponse.json({ error: 'TOO_OLD', message: '24시간 이상 경과된 사진은 등록할 수 없습니다.' }, { status: 400 });
   }
 
   // ② Firebase Storage 업로드
-  const ext = file.name.split('.').pop() ?? 'jpg';
-  const path = `live_feeds/${partnerId}/${Date.now()}.${ext}`;
-  const sRef = storageRef(storage, path);
-  await uploadBytes(sRef, buffer, { contentType: file.type });
-  const photoUrl = await getDownloadURL(sRef);
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const storagePath = `live_feeds/${partnerId}/${Date.now()}.${ext}`;
+  const sRef = storageRef(storage, storagePath);
+  let photoUrl: string;
+  try {
+    await uploadBytes(sRef, buffer, { contentType: file.type || 'image/jpeg' });
+    photoUrl = await getDownloadURL(sRef);
+  } catch (err) {
+    console.error('[upload] Firebase Storage 오류:', err);
+    return NextResponse.json({ error: 'STORAGE_ERROR', message: '이미지 저장 중 오류가 발생했습니다.' }, { status: 500 });
+  }
 
   // ③ 역지오코딩
   const locationName = await reverseGeocode(lat, lng);
@@ -181,12 +188,18 @@ export async function POST(req: NextRequest) {
     ctaLabel,
     ctaUrl: ctaUrl || null,
     ctaPhone: ctaPhone || null,
-    isApproved: true, // EXIF 검증 완료 → 자동 승인
+    isApproved: true,
     createdAt: Timestamp.now(),
-    expiresAt: Timestamp.fromDate(new Date(shootAt.getTime() + 12 * 3_600_000)),
+    expiresAt: Timestamp.fromDate(new Date(Date.now() + 24 * 3_600_000)),
   };
 
-  const ref = await addDoc(collection(db, 'live_feeds'), feedDoc);
+  let ref: { id: string };
+  try {
+    ref = await addDoc(collection(db, 'live_feeds'), feedDoc);
+  } catch (err) {
+    console.error('[upload] Firestore 저장 오류:', err);
+    return NextResponse.json({ error: 'DB_ERROR', message: '피드 저장 중 오류가 발생했습니다.' }, { status: 500 });
+  }
 
   return NextResponse.json({
     id: ref.id,
@@ -196,4 +209,8 @@ export async function POST(req: NextRequest) {
     freshLabel: freshLabel(shootAt),
     photoUrl,
   });
+  } catch (err) {
+    console.error('[upload] 예상치 못한 오류:', err);
+    return NextResponse.json({ error: 'INTERNAL', message: '서버 오류가 발생했습니다.' }, { status: 500 });
+  }
 }
