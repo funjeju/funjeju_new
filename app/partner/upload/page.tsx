@@ -36,6 +36,27 @@ interface ExifInfo {
 
 type ExifError = 'no-gps' | 'too-old' | null;
 
+async function compressImage(file: File): Promise<Blob> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const blobUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(blobUrl);
+      const MAX_PX = 1920;
+      const scale = Math.min(1, MAX_PX / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+      canvas.toBlob((blob) => resolve(blob ?? file), 'image/jpeg', 0.82);
+    };
+    img.onerror = () => resolve(file);
+    img.src = blobUrl;
+  });
+}
+
 function calcFreshScore(shootAt: Date): number {
   const diffHours = (Date.now() - shootAt.getTime()) / 3_600_000;
   if (diffHours < 1) return 100;
@@ -153,25 +174,47 @@ export default function PartnerUploadPage() {
     setUploading(true);
     setError(null);
 
+    // 클라이언트 압축 (413 방지) — EXIF는 이미 client에서 추출했으므로 manualLat/Lng 전달
+    const compressed = await compressImage(file);
+
     const form = new FormData();
-    form.append('photo', file);
+    form.append('photo', compressed, 'photo.jpg');
     form.append('partnerId', user.uid);
     form.append('businessName', profile.businessName);
     form.append('ctaType', profile.ctaType);
     form.append('ctaLabel', profile.ctaLabel);
+    form.append('manualLat', String(exifInfo.lat));
+    form.append('manualLng', String(exifInfo.lng));
     if (profile.ctaType === 'call') form.append('ctaPhone', profile.ctaPhone);
     else if (profile.ctaUrl) form.append('ctaUrl', profile.ctaUrl);
 
-    const res = await fetch('/api/live-feed/upload', { method: 'POST', body: form });
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(data.message ?? '업로드 실패');
+    let res: Response;
+    try {
+      res = await fetch('/api/live-feed/upload', { method: 'POST', body: form });
+    } catch {
+      setError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
       setUploading(false);
       return;
     }
 
-    setResult(data);
+    let data: Record<string, unknown>;
+    try {
+      data = await res.json();
+    } catch {
+      setError(res.status === 413
+        ? '파일이 너무 큽니다. 더 작은 사진을 선택해주세요.'
+        : `서버 오류 (${res.status})`);
+      setUploading(false);
+      return;
+    }
+
+    if (!res.ok) {
+      setError((data.message as string) ?? '업로드 실패');
+      setUploading(false);
+      return;
+    }
+
+    setResult(data as unknown as UploadResult);
     setUploading(false);
   }
 
