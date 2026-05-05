@@ -8,8 +8,6 @@ const tabs = [
   { href: '/', label: '홈', icon: '🏠' },
   { href: '/live-feed', label: 'Live', icon: '🔴' },
   { href: '/map', label: 'CCTV', icon: '📹' },
-  { href: '/oreums', label: '오름', icon: '🌿' },
-  { href: '/geocaching', label: '보물', icon: '📦' },
   { href: '/mypage', label: '마이', icon: '👤' },
 ];
 
