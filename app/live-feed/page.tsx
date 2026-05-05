@@ -40,56 +40,60 @@ function FeedCard({ feed }: { feed: LiveFeedEx }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#E2E8F0]">
-      {/* 사진 + EXIF 오버레이 */}
-      <div className="relative aspect-[4/3] bg-gray-100">
+    <div className="bg-black rounded-2xl overflow-hidden shadow-md">
+      {/* 세로형 사진 카드 (SNS 4:5 비율) */}
+      <div className="relative aspect-[4/5] bg-gray-900">
         {feed.photoUrl ? (
           <Image src={feed.photoUrl} alt={feed.businessName} fill className="object-cover" unoptimized />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-200 text-5xl">📷</div>
+          <div className="w-full h-full flex items-center justify-center text-gray-600 text-5xl">📷</div>
         )}
 
-        {/* 상단: freshScore 뱃지 + 지역 */}
-        <div className="absolute top-0 left-0 right-0 flex items-start justify-between p-3">
-          <div className={`flex items-center gap-1.5 ${freshColor(score)} text-white text-xs font-bold px-2.5 py-1 rounded-full shadow`}>
+        {/* 상단 그라데이션 */}
+        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/60 to-transparent pointer-events-none" />
+
+        {/* 상단: 신선도 뱃지 + 위치 */}
+        <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
+          <div className={`flex items-center gap-1.5 ${freshColor(score)} text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-lg`}>
             <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
             {label}
           </div>
           {feed.region && (
-            <div className="bg-black/50 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full">
+            <div className="bg-black/55 backdrop-blur-md text-white text-[11px] px-2.5 py-1 rounded-full font-medium">
               📍 {feed.region}
             </div>
           )}
         </div>
 
-        {/* 하단: EXIF 정보 레이어 */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
-          {/* 업체명 */}
-          <p className="text-white font-bold text-base leading-tight mb-1">{feed.businessName}</p>
+        {/* 하단 그라데이션 */}
+        <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none" />
 
-          {/* EXIF 메타 */}
-          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mb-2">
+        {/* 하단 콘텐츠 */}
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          {/* 업체명 + 날짜·좌표 */}
+          <p className="text-white font-bold text-sm leading-tight">{feed.businessName}</p>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 mb-3">
             {exifTime && (
-              <span className="text-white/80 text-xs flex items-center gap-1">
-                🕐 {exifTime} 촬영
-              </span>
+              <span className="text-white/65 text-[11px]">🕐 {exifTime} 촬영</span>
             )}
             {feed.exifLat && feed.exifLng && (
-              <span className="text-white/80 text-xs flex items-center gap-1">
-                🌐 {Number(feed.exifLat).toFixed(4)}, {Number(feed.exifLng).toFixed(4)}
+              <span className="text-white/50 text-[10px] font-mono">
+                {Number(feed.exifLat).toFixed(4)}, {Number(feed.exifLng).toFixed(4)}
               </span>
             )}
           </div>
 
-          {/* AI 생성 캡션 */}
+          {/* AI 감성 캡션 — 반투명 글상자 */}
           {feed.caption && (
-            <p className="text-white/90 text-xs leading-relaxed line-clamp-2 mb-3">{feed.caption}</p>
+            <div className="bg-white/12 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-2.5 mb-3">
+              <p className="text-white text-xs leading-relaxed tracking-wide">{feed.caption}</p>
+            </div>
           )}
 
           {/* CTA 버튼 */}
           <button
             onClick={handleCTA}
-            className="w-full py-2.5 bg-white text-[#0EA5A0] rounded-xl text-sm font-bold flex items-center justify-center gap-1.5 hover:bg-[#E0F7F6] transition-colors"
+            className="w-full py-2.5 bg-white/95 text-[#0EA5A0] rounded-xl text-sm font-bold flex items-center justify-center gap-1.5 hover:bg-white transition-colors"
           >
             <span>{CTA_ICONS[feed.ctaType] ?? '👉'}</span>
             <span>{feed.ctaLabel}</span>
@@ -98,11 +102,8 @@ function FeedCard({ feed }: { feed: LiveFeedEx }) {
       </div>
 
       {/* 신선도 프로그레스바 */}
-      <div className="h-1 bg-gray-100">
-        <div
-          className={`h-full ${freshColor(score)} transition-all`}
-          style={{ width: `${score}%` }}
-        />
+      <div className="h-[3px] bg-gray-800">
+        <div className={`h-full ${freshColor(score)} transition-all`} style={{ width: `${score}%` }} />
       </div>
     </div>
   );
@@ -110,9 +111,9 @@ function FeedCard({ feed }: { feed: LiveFeedEx }) {
 
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-[#E2E8F0] animate-pulse">
-      <div className="aspect-[4/3] bg-gray-200" />
-      <div className="h-1 bg-gray-100" />
+    <div className="bg-gray-900 rounded-2xl overflow-hidden animate-pulse">
+      <div className="aspect-[4/5] bg-gray-800" />
+      <div className="h-[3px] bg-gray-800" />
     </div>
   );
 }
@@ -146,7 +147,7 @@ export default function LiveFeedPage() {
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="max-w-md mx-auto px-4 py-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-5">
         <div>
@@ -162,10 +163,10 @@ export default function LiveFeedPage() {
         </Link>
       </div>
 
-      {/* 피드 그리드 */}
+      {/* 피드 — SNS 단일 컬럼 */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+        <div className="flex flex-col gap-5">
+          {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
       ) : feeds.length === 0 ? (
         <div className="text-center py-20">
@@ -180,7 +181,7 @@ export default function LiveFeedPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-5">
           {feeds.map(f => <FeedCard key={f.id} feed={f} />)}
         </div>
       )}
