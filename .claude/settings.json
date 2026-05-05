@@ -14,7 +14,10 @@
       "Bash(node -e \"console.log\\(require\\('./node_modules/firebase-admin/package.json'\\).version\\)\")",
       "Bash(firebase storage:buckets:list)",
       "Bash(firebase apps:list)",
-      "Bash(gcloud storage *)"
+      "Bash(gcloud storage *)",
+      "Bash(firebase storage:get-rules)",
+      "Bash(firebase help *)",
+      "Bash(node -e ' *)"
     ]
   }
 }
