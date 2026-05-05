@@ -156,16 +156,21 @@ export async function POST(req: NextRequest) {
   const storagePath = `live_feeds/${partnerId}/${Date.now()}.${ext}`;
   let photoUrl: string;
   try {
+    const { randomUUID } = await import('crypto');
+    const token = randomUUID();
     const bucket = adminStorage();
     const fileRef = bucket.file(storagePath);
     await fileRef.save(Buffer.from(buffer), {
-      metadata: { contentType: file.type || 'image/jpeg' },
+      metadata: {
+        contentType: file.type || 'image/jpeg',
+        metadata: { firebaseStorageDownloadTokens: token },
+      },
     });
-    await fileRef.makePublic();
-    photoUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
+    // Firebase 스타일 영구 다운로드 URL (makePublic 불필요)
+    photoUrl = `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket.name)}/o/${encodeURIComponent(storagePath)}?alt=media&token=${token}`;
   } catch (err) {
     console.error('[upload] Firebase Storage 오류:', err);
-    return NextResponse.json({ error: 'STORAGE_ERROR', message: '이미지 저장 중 오류가 발생했습니다.' }, { status: 500 });
+    return NextResponse.json({ error: 'STORAGE_ERROR', message: `이미지 저장 오류: ${String(err)}` }, { status: 500 });
   }
 
   // ③ 역지오코딩
