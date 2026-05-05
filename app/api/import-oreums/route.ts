@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * POST /api/import-oreums
  * k-lokal JSON 중 Oroom + Mountain 카테고리 → Firestore oreums 컬렉션

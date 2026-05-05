@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Firestore 초기 seed 데이터 API
  * POST /api/seed          → 없는 문서만 추가

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * POST /api/import-pois?offset=0&limit=200
  * k-lokal JSON → Firestore pois 컬렉션 배치 import
