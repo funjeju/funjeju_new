@@ -15,7 +15,7 @@ export default function Header() {
 
   const navItems = [
     { href: '/live-feed', label: '🔴 Live 피드' },
-    { href: '/map', label: '지도·CCTV' },
+    { href: '/map', label: 'CCTV' },
     { href: '/oreums', label: '오름 도감' },
     { href: '/missions', label: '미션' },
     { href: '/geocaching', label: '📦 지오캐싱' },

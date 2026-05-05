@@ -8,6 +8,7 @@ export interface CCTVLocation {
   lng: number;
   streamUrl: string;
   tags: string[];
+  direction?: '동' | '서' | '남' | '북';
   nearbyPoiIds: string[];
   nearbyOreumIds: string[];
   isActive: boolean;
