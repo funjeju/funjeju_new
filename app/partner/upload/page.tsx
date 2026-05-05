@@ -302,7 +302,7 @@ export default function PartnerUploadPage() {
       )}
 
       {/* 미리보기 카드 — SNS 세로 비율(4:5) + EXIF 오버레이 */}
-      {showCard && profile && imgSrc && (
+      {showCard && imgSrc && (
         <div className="rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-sm mb-4 bg-white">
           <div className="relative aspect-[4/5] bg-gray-100 overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -354,13 +354,15 @@ export default function PartnerUploadPage() {
             </div>
           </div>
 
-          {/* CTA 카드 */}
-          <div className="px-4 py-3 flex items-center justify-between bg-white">
-            <span className="text-sm font-semibold text-[#1A2F4B]">{profile.businessName}</span>
-            <button className="text-xs bg-[#0EA5A0] text-white px-4 py-1.5 rounded-lg font-medium">
-              {profile.ctaLabel}
-            </button>
-          </div>
+          {/* CTA 카드 — 프로필 있을 때만 */}
+          {profile && (
+            <div className="px-4 py-3 flex items-center justify-between bg-white">
+              <span className="text-sm font-semibold text-[#1A2F4B]">{profile.businessName}</span>
+              <button className="text-xs bg-[#0EA5A0] text-white px-4 py-1.5 rounded-lg font-medium">
+                {profile.ctaLabel}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
