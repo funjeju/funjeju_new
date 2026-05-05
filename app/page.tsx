@@ -81,48 +81,58 @@ interface LiveFeedEx extends LiveFeed {
 function LiveFeedCard({ feed }: { feed: LiveFeedEx }) {
   function handleCTA(e: React.MouseEvent) {
     e.stopPropagation();
-    if (feed.ctaType === 'call' && feed.ctaPhone) {
-      window.location.href = `tel:${feed.ctaPhone}`;
-    } else if (feed.ctaUrl) {
-      window.open(feed.ctaUrl, '_blank');
-    }
+    if (feed.ctaType === 'call' && feed.ctaPhone) window.location.href = `tel:${feed.ctaPhone}`;
+    else if (feed.ctaUrl) window.open(feed.ctaUrl, '_blank');
   }
 
-  const freshLabel = feed.freshLabel ?? null;
-  const isFresh = (feed.freshScore ?? 100) >= 80;
+  const score = feed.freshScore ?? 100;
+  const label = feed.freshLabel ?? 'LIVE';
+  const freshColor = score >= 80 ? 'bg-red-500' : score >= 60 ? 'bg-orange-400' : 'bg-gray-400';
 
   return (
-    <div className="rounded-xl overflow-hidden bg-white border border-[#E2E8F0] hover:shadow-md transition-shadow">
-      {/* 사진 */}
-      <div className="relative aspect-[4/3] bg-gray-100">
+    <div className="rounded-2xl overflow-hidden bg-black shadow-md">
+      <div className="relative aspect-[4/5] bg-gray-900">
         {feed.photoUrl ? (
           <Image src={feed.photoUrl} alt={feed.businessName} fill className="object-cover" unoptimized />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300 text-3xl">📷</div>
+          <div className="w-full h-full flex items-center justify-center text-gray-600 text-3xl">📷</div>
         )}
-        {/* 신선도 뱃지 */}
-        <div className="absolute top-2 left-2 flex items-center gap-1 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-          <span className={`w-1.5 h-1.5 bg-white rounded-full ${isFresh ? 'animate-pulse' : ''}`} />
-          {freshLabel ?? 'LIVE'}
-        </div>
-        {feed.region && (
-          <span className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded-full">
-            📍 {feed.region}
-          </span>
-        )}
-      </div>
 
-      {/* 정보 + CTA */}
-      <div className="p-3">
-        <p className="text-sm font-semibold text-[#1A2F4B] truncate">{feed.businessName}</p>
-        {feed.caption && <p className="text-xs text-[#64748B] mt-0.5 line-clamp-2">{feed.caption}</p>}
-        <button
-          onClick={handleCTA}
-          className="mt-2 w-full py-1.5 bg-[#0EA5A0] text-white text-xs font-semibold rounded-lg hover:bg-[#0D7A76] transition-colors flex items-center justify-center gap-1"
-        >
-          <span>{CTA_ICONS[feed.ctaType]}</span>
-          <span>{feed.ctaLabel}</span>
-        </button>
+        {/* 상단 그라데이션 */}
+        <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/60 to-transparent pointer-events-none" />
+
+        {/* 뱃지 */}
+        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between">
+          <div className={`flex items-center gap-1 ${freshColor} text-white text-[10px] font-bold px-2 py-0.5 rounded-full`}>
+            <span className="w-1 h-1 bg-white rounded-full animate-pulse" />
+            {label}
+          </div>
+          {feed.region && (
+            <div className="bg-black/55 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-full">
+              📍 {feed.region}
+            </div>
+          )}
+        </div>
+
+        {/* 하단 그라데이션 */}
+        <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none" />
+
+        {/* 하단 콘텐츠 */}
+        <div className="absolute bottom-0 left-0 right-0 p-3">
+          <p className="text-white font-bold text-xs leading-tight mb-2">{feed.businessName}</p>
+          {feed.caption && (
+            <div className="bg-white/12 backdrop-blur-sm border border-white/15 rounded-xl px-2.5 py-1.5 mb-2">
+              <p className="text-white text-[10px] leading-relaxed line-clamp-2">{feed.caption}</p>
+            </div>
+          )}
+          <button
+            onClick={handleCTA}
+            className="w-full py-1.5 bg-white/95 text-[#0EA5A0] rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 hover:bg-white transition-colors"
+          >
+            <span>{CTA_ICONS[feed.ctaType] ?? '👉'}</span>
+            <span>{feed.ctaLabel}</span>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -243,66 +253,116 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto md:max-w-5xl px-4 py-4 space-y-8">
-
-      {/* Hero */}
-      <section>
-        <HeroSection cctv={heroCctv} />
-      </section>
-
-      {/* Live 피드 */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-[#1A2F4B]">지금 제주 Live 피드</h2>
-          <Link href="/map" className="text-xs text-[#0EA5A0]">전체보기</Link>
-        </div>
-        {loading || liveFeeds.length === 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="aspect-video" />)}
+    <>
+      {/* ── 모바일: 인스타 스타일 세로 피드 ── */}
+      <div className="md:hidden max-w-md mx-auto px-3 py-3">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-base font-bold text-[#1A2F4B]">🔴 지금 제주 Live</h2>
+            <p className="text-xs text-[#64748B]">소상공인이 방금 찍은 현장</p>
           </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {liveFeeds.slice(0, 8).map(feed => <LiveFeedCard key={feed.id} feed={feed} />)}
-          </div>
-        )}
-      </section>
-
-      {/* 이번 주 미션 */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-[#1A2F4B]">이번 주 미션</h2>
-          <Link href="/missions" className="text-xs text-[#0EA5A0]">전체보기</Link>
+          <Link href="/live-feed" className="text-xs text-[#0EA5A0] font-medium">전체보기</Link>
         </div>
-        {loading || missions.length === 0 ? (
-          <div className="flex gap-3 overflow-x-auto pb-2">
+
+        {loading ? (
+          <div className="flex flex-col gap-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="min-w-[200px] h-40 flex-shrink-0" />
+              <div key={i} className="rounded-2xl overflow-hidden animate-pulse bg-gray-200 aspect-[4/5]" />
             ))}
           </div>
-        ) : (
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {missions.map(m => <MissionCard key={m.id} mission={m} />)}
-          </div>
-        )}
-      </section>
-
-      {/* 오름 스탬프 Pick */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-[#1A2F4B]">오름 스탬프 Pick</h2>
-          <Link href="/oreums" className="text-xs text-[#0EA5A0]">도감 보기</Link>
-        </div>
-        {loading || oreums.length === 0 ? (
-          <div className="grid grid-cols-3 gap-3">
-            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-44" />)}
+        ) : liveFeeds.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-4xl mb-3">📷</p>
+            <p className="text-sm font-semibold text-[#1A2F4B] mb-1">아직 Live 피드가 없어요</p>
+            <Link href="/partner/upload" className="inline-block mt-3 px-5 py-2 bg-[#0EA5A0] text-white rounded-xl text-sm font-semibold">
+              첫 번째 피드 올리기
+            </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-3">
-            {oreums.map(o => <OreumCard key={o.id} oreum={o} />)}
+          <div className="flex flex-col gap-4">
+            {liveFeeds.map(feed => <LiveFeedCard key={feed.id} feed={feed} />)}
           </div>
         )}
-      </section>
 
-    </div>
+        {/* 미션 — 가로 스크롤 (모바일 하단) */}
+        {missions.length > 0 && (
+          <section className="mt-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-[#1A2F4B]">이번 주 미션</h2>
+              <Link href="/missions" className="text-xs text-[#0EA5A0]">전체보기</Link>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-3 px-3">
+              {missions.map(m => <MissionCard key={m.id} mission={m} />)}
+            </div>
+          </section>
+        )}
+      </div>
+
+      {/* ── PC: 기존 레이아웃 ── */}
+      <div className="hidden md:block max-w-5xl mx-auto px-4 py-4 space-y-8">
+
+        {/* Hero */}
+        <section>
+          <HeroSection cctv={heroCctv} />
+        </section>
+
+        {/* Live 피드 — 4열 그리드 */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-[#1A2F4B]">지금 제주 Live 피드</h2>
+            <Link href="/live-feed" className="text-xs text-[#0EA5A0]">전체보기</Link>
+          </div>
+          {loading || liveFeeds.length === 0 ? (
+            <div className="grid grid-cols-4 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="rounded-2xl overflow-hidden animate-pulse bg-gray-200 aspect-[4/5]" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-4 gap-3">
+              {liveFeeds.slice(0, 8).map(feed => <LiveFeedCard key={feed.id} feed={feed} />)}
+            </div>
+          )}
+        </section>
+
+        {/* 이번 주 미션 */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-[#1A2F4B]">이번 주 미션</h2>
+            <Link href="/missions" className="text-xs text-[#0EA5A0]">전체보기</Link>
+          </div>
+          {loading || missions.length === 0 ? (
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="min-w-[200px] h-40 flex-shrink-0" />
+              ))}
+            </div>
+          ) : (
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {missions.map(m => <MissionCard key={m.id} mission={m} />)}
+            </div>
+          )}
+        </section>
+
+        {/* 오름 스탬프 Pick */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-[#1A2F4B]">오름 스탬프 Pick</h2>
+            <Link href="/oreums" className="text-xs text-[#0EA5A0]">도감 보기</Link>
+          </div>
+          {loading || oreums.length === 0 ? (
+            <div className="grid grid-cols-3 gap-3">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-44" />)}
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {oreums.map(o => <OreumCard key={o.id} oreum={o} />)}
+            </div>
+          )}
+        </section>
+
+      </div>
+    </>
   );
 }
