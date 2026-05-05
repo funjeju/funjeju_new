@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import ExifReader from 'exifreader';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '@/lib/firebase/config';
+import { FieldValue } from 'firebase-admin/firestore';
+import { adminStorage, adminDb } from '@/lib/firebase/admin';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -152,14 +151,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'TOO_OLD', message: '24시간 이상 경과된 사진은 등록할 수 없습니다.' }, { status: 400 });
   }
 
-  // ② Firebase Storage 업로드
+  // ② Firebase Storage 업로드 (Admin SDK — Security Rules 우회)
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
   const storagePath = `live_feeds/${partnerId}/${Date.now()}.${ext}`;
-  const sRef = storageRef(storage, storagePath);
   let photoUrl: string;
   try {
-    await uploadBytes(sRef, buffer, { contentType: file.type || 'image/jpeg' });
-    photoUrl = await getDownloadURL(sRef);
+    const bucket = adminStorage();
+    const fileRef = bucket.file(storagePath);
+    await fileRef.save(Buffer.from(buffer), {
+      metadata: { contentType: file.type || 'image/jpeg' },
+    });
+    await fileRef.makePublic();
+    photoUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
   } catch (err) {
     console.error('[upload] Firebase Storage 오류:', err);
     return NextResponse.json({ error: 'STORAGE_ERROR', message: '이미지 저장 중 오류가 발생했습니다.' }, { status: 500 });
@@ -171,7 +174,7 @@ export async function POST(req: NextRequest) {
   // ④ Gemini Vision 분석
   const aiContent = await analyzeWithGemini(photoUrl, locationName, shootAt);
 
-  // ⑤ Firestore 저장
+  // ⑤ Firestore 저장 (Admin SDK)
   const feedDoc = {
     partnerId,
     businessName,
@@ -181,7 +184,7 @@ export async function POST(req: NextRequest) {
     tags: [],
     exifLat: lat,
     exifLng: lng,
-    exifTakenAt: Timestamp.fromDate(shootAt),
+    exifTakenAt: shootAt,
     freshScore,
     freshLabel: freshLabel(shootAt),
     ctaType,
@@ -189,13 +192,13 @@ export async function POST(req: NextRequest) {
     ctaUrl: ctaUrl || null,
     ctaPhone: ctaPhone || null,
     isApproved: true,
-    createdAt: Timestamp.now(),
-    expiresAt: Timestamp.fromDate(new Date(Date.now() + 24 * 3_600_000)),
+    createdAt: FieldValue.serverTimestamp(),
+    expiresAt: new Date(Date.now() + 24 * 3_600_000),
   };
 
-  let ref: { id: string };
+  let ref: FirebaseFirestore.DocumentReference;
   try {
-    ref = await addDoc(collection(db, 'live_feeds'), feedDoc);
+    ref = await adminDb().collection('live_feeds').add(feedDoc);
   } catch (err) {
     console.error('[upload] Firestore 저장 오류:', err);
     return NextResponse.json({ error: 'DB_ERROR', message: '피드 저장 중 오류가 발생했습니다.' }, { status: 500 });
