@@ -4,6 +4,7 @@ import './globals.css';
 import Header from '@/components/layout/Header';
 import MobileTabBar from '@/components/layout/MobileTabBar';
 import FloatingChatbot from '@/components/layout/FloatingChatbot';
+import Providers from '@/components/Providers';
 
 const geist = Geist({
   variable: '--font-geist-sans',
@@ -19,12 +20,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko" className={`${geist.variable} h-full`}>
       <body className="min-h-full bg-[#F8FAFC] text-[#1A2F4B] antialiased">
-        <Header />
-        <main className="md:pt-16 pb-16 md:pb-0 min-h-screen">
-          {children}
-        </main>
-        <MobileTabBar />
-        <FloatingChatbot />
+        <Providers>
+          <Header />
+          <main className="md:pt-16 pb-16 md:pb-0 min-h-screen">
+            {children}
+          </main>
+          <MobileTabBar />
+          <FloatingChatbot />
+        </Providers>
       </body>
     </html>
   );

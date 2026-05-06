@@ -243,6 +243,73 @@ export interface LiveFeed {
   createdAt: Timestamp;
 }
 
+// ====== Feed (SNS 피드) ======
+export type BusinessCategory = '서핑' | '스냅' | '낚시' | '공예' | '박물관' | '꽃관련' | '기타체험';
+
+export interface FeedMediaExif {
+  latitude?: number;
+  longitude?: number;
+  location?: string;
+  dateTime?: string;
+  rawDateTime?: string;
+  camera?: string;
+  aperture?: string;
+  fNumber?: string;
+  iso?: number;
+  exposureTime?: string;
+  focalLength?: string;
+}
+
+export interface FeedMedia {
+  id: string;
+  type: 'image' | 'video';
+  url: string;
+  exif: FeedMediaExif;
+  bubbleText?: string;
+  bubblePosition?: string;
+  bubbleOpacity?: number;
+}
+
+export interface FeedComment {
+  id: string;
+  userId: string;
+  username: string;
+  content: string;
+  timestamp: any;
+}
+
+export interface FeedPost {
+  id: string;
+  userId: string;
+  username: string;
+  userAvatar?: string;
+  userRole?: 'user' | 'store';
+  businessName?: string;
+  businessCategory?: BusinessCategory;
+  businessWebsite?: string;
+  content: string;
+  media: FeedMedia[];
+  timestamp: any;
+  createdAt: any;
+  likes: number;
+  comments: number;
+  bookmarks?: number;
+  likedBy?: string[];
+  bookmarkedBy?: string[];
+  commentList?: FeedComment[];
+  nearbySpots?: { id: string; title: string; thumbnailUrl: string; distance: number }[];
+  feedType?: 'live' | 'cctv' | null;
+}
+
+export interface Place {
+  place_id: string;
+  place_name: string;
+  location?: { latitude: number; longitude: number };
+  categories?: string[];
+  images?: { url: string }[];
+  region?: string;
+}
+
 // ====== 유튜브 캐시 ======
 export interface JejuTubeCache {
   videoId: string;
