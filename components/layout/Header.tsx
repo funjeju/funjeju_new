@@ -8,18 +8,24 @@ import { useChatStore } from '@/store/chatStore';
 import type { ChatTab } from '@/store/chatStore';
 import Image from 'next/image';
 
+const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '').split(',').map(e => e.trim());
+
 export default function Header() {
   const pathname = usePathname();
   const { user } = useAuth();
   const { setOpen } = useChatStore();
 
+  const isAdmin = !!user && ADMIN_EMAILS.includes(user.email ?? '');
+
   const navItems = [
     { href: '/live-feed', label: '🔴 Live 피드' },
     { href: '/map', label: 'CCTV' },
-    { href: '/oreums', label: '오름 도감' },
-    { href: '/missions', label: '미션' },
-    { href: '/geocaching', label: '📦 지오캐싱' },
-    { href: '/jeju-tube', label: '제주 소식' },
+    ...(isAdmin ? [
+      { href: '/oreums', label: '오름 도감' },
+      { href: '/missions', label: '미션' },
+      { href: '/geocaching', label: '📦 지오캐싱' },
+      { href: '/jeju-tube', label: '제주 소식' },
+    ] : []),
   ];
 
   const aiItems: { label: string; tab: ChatTab }[] = [

@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'i.ytimg.com',
       },
+      // 구글 프로필 이미지
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
     ],
   },
 };
